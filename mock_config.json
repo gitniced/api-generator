@@ -1,5 +1,5 @@
 {
-  "originUrl": "",
+  "originUrl": "http://10.1.10.241:32369/project/52",
   "outDir": "/api",
-  "templatePath": "/template"
+  "templatePath": "/template/service.ejs"
 }

@@ -1,0 +1,22 @@
+import { stringify } from 'qs';
+import request from '@/utils/request';
+import configs from '@/utils/env'
+
+<% data.forEach(function(item){ %>
+  <% if (item.method === 'GET') { %>
+    // <%= item.title%>
+    export async function <%= item.funcName %>(params) {
+      return request(`<%= item.path %>?${stringify(params, { arrayFormat: 'comma' })}`);
+    }
+  <% } %>
+  <% if (item.method === 'POST') { %>
+    // <%= item.title%>
+    export async function <%= item.funcName %>(params) {
+      return request(`<%= item.path %>`,{
+        methods: 'POST',
+        body: param
+      });
+    }
+  <% } %>
+<% }); %>
+
