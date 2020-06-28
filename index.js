@@ -26,7 +26,7 @@ fetchJson.getApiInfo().then((res) => {
                 ...item,
                 funcName: item.path
                     .split("/")
-                    .map((str, idx) => idx === 0 ? str : first2UpperCase(str))
+                    .map((str, idx) => idx === 1 ? str : first2UpperCase(str))
                     .join(""),
             })),
         }), { parser: "babel" });
