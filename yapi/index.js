@@ -2,6 +2,7 @@ const request = require("request");
 const url = require("url");
 const qs = require("qs");
 const util = require("util");
+const { forEachSync } = require("../utils");
 
 const httpGet = util.promisify(request.get);
 const interf = {
@@ -20,9 +21,9 @@ const options = {
 };
 
 /**
- * 获取 swagger Json
+ * 获取 Yapi Json
  */
-class FetchJson {
+class Yapi {
     constructor(config) {
         const urlObj = url.parse(config.originUrl);
         this.info = {
@@ -103,21 +104,24 @@ class FetchJson {
         return result;
     }
 
-    async getApiInfo(){
-      return this.getListMenuSync().then(res => {
-        const apiMenu = {};
-        const data = res.data;
-        data.forEach(item => {
-          item.list.forEach(apiInfo => {
-            const sort = apiInfo.path.split('/')[1];
-            const info = apiInfo;
-            apiMenu[sort] = apiMenu[sort] ? [ ...apiMenu[sort], info ] : [ info ];
-            this.getDetailsSync(info._id)
-          })
-        })
-        return apiMenu;
-      })
+    async getApiInfo() {
+        return this.getListMenuSync().then(async (res) => {
+            const apiMenu = {};
+
+            await forEachSync(res.data, async (item) => {
+                await forEachSync(item.list, async (apiInfo) => {
+                    await this.getDetailsSync(apiInfo._id).then(response => {
+                        const info = response.data;
+                        const sort = info.path.split("/")[1];
+                        apiMenu[sort] = apiMenu[sort]
+                        ? [...apiMenu[sort], info]
+                        : [info];
+                    });
+                });
+            });
+            return apiMenu;
+        });
     }
 }
 
-module.exports = FetchJson;
+module.exports = Yapi;

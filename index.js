@@ -1,10 +1,10 @@
 "use strict";
-const FetchJson = require("./fetch-mock");
+const Yapi = require("./yapi");
 const fs = require("fs");
 const ejs = require("ejs");
 const path = require("path");
 const prettier = require("prettier");
-const { first2UpperCase } = require("./utils");
+const { path2FunctionName } = require("./utils/templateData");
 // 获取配置项
 const CONFIGRUE_TXT = fs.readFileSync("./mock_config.json", "utf8");
 const configrue = JSON.parse(CONFIGRUE_TXT);
@@ -15,28 +15,31 @@ const content = fs.readFileSync(
     "utf8"
 );
 
-// 获取 swagger Json
-const fetchJson = new FetchJson(configrue);
-fetchJson.getApiInfo().then((res) => {
+// 获取 yapi Json
+const yapi = new Yapi(configrue);
+yapi.getApiInfo().then((res) => {
     const fileList = {};
     // 根据 json，模板  生成 js Api文件内容
     Object.keys(res).forEach((item) => {
         fileList[item] = prettier.format(ejs.render(content, {
-            data: res[item].map((item) => ({
+            data: res[item].map((item) => {
+              const { req_query = [], req_params = [] } = item;
+              return {
                 ...item,
-                funcName: item.path
-                    .split("/")
-                    .map((str, idx) => idx === 1 ? str : first2UpperCase(str))
-                    .join(""),
-            })),
+                funcName: path2FunctionName(item.path),
+                query: req_query.map(item => item.name),
+                params: req_params.map(item => item.name.replace(':', '')),
+                path: item.path.split(':')[0]
+              }
+            }),
         }), { parser: "babel" });
         // 写入文件
         fs.writeFileSync(
-            path.join(__dirname, `/api/${item}.js`),
+            path.join(__dirname, `/dist/api/${item}.js`),
             fileList[item],
             "utf-8"
         );
-    });
+      });
+      console.log('生成完毕')
 });
 
-console.log('生成完毕')
